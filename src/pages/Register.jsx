@@ -4,6 +4,7 @@ import { Card, TextInput, Stack, Divider, Title, Button } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { fireDB } from '../firebase';
+import { showNotification } from '@mantine/notifications';
 
 function Register() {
   const registerForm = useForm({
@@ -31,10 +32,14 @@ function Register() {
           const qry = query(collection(fireDB, 'users'), where('email', '==', registerForm.values.email));
           const existingUsers = await getDocs(qry);
           if (existingUsers.size > 0) {
-            alert('abay charye ! Pehle se register ha tu , login kar');
+            showNotification({
+              title: `abay charye ! Pehle se register ha tu , login kar na'`,
+              color: 'red',
+            });
             return;
           }
           // Firestore: Save data
+
           const response = await addDoc(collection(fireDB, 'users'), {
             name: registerForm.values.name,
             email: registerForm.values.email,
@@ -42,11 +47,22 @@ function Register() {
             createdAt: new Date(),
           });
           if (response.id) {
-            alert('Ho gaya ha Tu Register Salay !');
+            showNotification({
+              title: `Teri id ban gayi ha ab Login krke Enjoy kr bro !`,
+              color: 'green',
+            });
+          } else {
+            showNotification({
+              title: `Koi issue aa raha hoga mujhse rabta karle`,
+              color: 'red',
+            });
           }
         } catch (error) {
           console.error('Error registering user:', error);
-          alert('Error registering user, please try again.');
+          showNotification({
+            title: `Koi Network Issue ho skta ha ya Backend issue aa raha hoga !`,
+            color: 'red',
+          });
         }
       }
     }

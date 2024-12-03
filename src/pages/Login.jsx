@@ -4,6 +4,7 @@ import { Card, TextInput, Stack, Divider, Title, Button } from '@mantine/core';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { fireDB } from '../firebase';
+import { showNotification } from '@mantine/notifications';
 
 function Login() {
   const loginForm = useForm({
@@ -23,13 +24,22 @@ function Login() {
       const qry = query(collection(fireDB, 'users'), where('email', '==', loginForm.values.email), where('password', '==', loginForm.values.password));
       const existingUsers = await getDocs(qry);
       if (existingUsers.size > 0) {
-        alert('Login Ho gaya to Kaaliya');
+        showNotification({
+          title: `Han Bsdk ho gaya tu login`,
+          color: 'green',
+        });
       } else {
-        alert('Chala Ja Bhosdi kay ! Galat Password/email daal raha ha Bsdk');
+        showNotification({
+          title: `Chala Ja Bhosdi kay ! Galat Password/email daal raha ha kuttay`,
+          color: 'red',
+        });
       }
     } catch (error) {
       console.log(error);
-      alert('Kuch to galat hoa ha , mujhse Raabta kar lay !');
+      showNotification({
+        title: `Kuch to galat hoa ha , mujhse Raabta kar lay ! Maybe Backend issue`,
+        color: 'red',
+      });
     }
   };
 
@@ -46,7 +56,7 @@ function Login() {
   return (
     <>
       <div className='flex h-screen justify-center items-center'>
-        <Card sx={{ width: 400 }} shadow='lg' withBorder>
+        <Card sx={{ width: 500 }} shadow='lg' withBorder>
           <Title order={3} align='center' mb={3}>
             Login With Your Credentials
           </Title>
