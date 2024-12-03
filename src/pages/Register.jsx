@@ -5,8 +5,12 @@ import { Link } from 'react-router-dom';
 import { addDoc, collection, getDocs, query, where } from 'firebase/firestore';
 import { fireDB } from '../firebase';
 import { showNotification } from '@mantine/notifications';
+import { useDispatch } from 'react-redux';
+import { HideLoading, ShowLoading } from '../redux/alertsSlice';
 
 function Register() {
+  const dispatch = useDispatch();
+
   const registerForm = useForm({
     initialValues: {
       name: '',
@@ -29,6 +33,7 @@ function Register() {
       if (!isValid.hasErrors) {
         try {
           //check if user exist based on email
+          dispatch(ShowLoading());
           const qry = query(collection(fireDB, 'users'), where('email', '==', registerForm.values.email));
           const existingUsers = await getDocs(qry);
           if (existingUsers.size > 0) {
@@ -57,7 +62,9 @@ function Register() {
               color: 'red',
             });
           }
+          dispatch(HideLoading());
         } catch (error) {
+          dispatch(HideLoading());
           console.error('Error registering user:', error);
           showNotification({
             title: `Koi Network Issue ho skta ha ya Backend issue aa raha hoga !`,

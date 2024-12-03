@@ -6,8 +6,11 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { fireDB } from '../firebase';
 import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { HideLoading, ShowLoading } from '../redux/alertsSlice';
 
 function Login() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const loginForm = useForm({
@@ -24,6 +27,7 @@ function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     try {
+      dispatch(ShowLoading());
       const qry = query(collection(fireDB, 'users'), where('email', '==', loginForm.values.email), where('password', '==', loginForm.values.password));
       const existingUsers = await getDocs(qry);
       if (existingUsers.size > 0) {
@@ -45,7 +49,9 @@ function Login() {
           color: 'red',
         });
       }
+      dispatch(HideLoading());
     } catch (error) {
+      dispatch(HideLoading());
       console.log(error);
       showNotification({
         title: `Kuch to galat hoa ha , mujhse Raabta kar lay ! Maybe Backend issue`,

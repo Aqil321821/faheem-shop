@@ -44,7 +44,7 @@ body {
   justify-content: center;
   display: flex;
   z-index: 9999 !important;
-  background-color: rgba(255, 255, 255, 0.499);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 .w-50 {
@@ -59,9 +59,9 @@ i {
   cursor: pointer;
 }
 
-/* input{
+input{
    border : 1px solid rgb(79, 83, 83) !important;
-} */
+}
 
 .container {
   height: 85vh !important;

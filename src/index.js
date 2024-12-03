@@ -4,12 +4,16 @@ import './index.css';
 import App from './App';
 import { MantineProvider } from '@mantine/core';
 import { NotificationsProvider } from '@mantine/notifications';
+import store from './redux/store';
+import { Provider } from 'react-redux';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <MantineProvider withGlobalStyles withNormalizeCSS>
     <NotificationsProvider position='top-right'>
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </NotificationsProvider>
   </MantineProvider>
 );
