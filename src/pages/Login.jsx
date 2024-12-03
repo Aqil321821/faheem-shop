@@ -5,8 +5,11 @@ import { Link } from 'react-router-dom';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { fireDB } from '../firebase';
 import { showNotification } from '@mantine/notifications';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
+  const navigate = useNavigate();
+
   const loginForm = useForm({
     initialValues: {
       email: '',
@@ -28,6 +31,14 @@ function Login() {
           title: `Han Bsdk ho gaya tu login`,
           color: 'green',
         });
+        //set data to local storage
+        const dataToPutInLocalStorage = {
+          name: existingUsers.docs[0].data().name,
+          email: existingUsers.docs[0].data().email,
+          id: existingUsers.docs[0].id,
+        };
+        localStorage.setItem('user', JSON.stringify(dataToPutInLocalStorage));
+        navigate('/');
       } else {
         showNotification({
           title: `Chala Ja Bhosdi kay ! Galat Password/email daal raha ha kuttay`,
