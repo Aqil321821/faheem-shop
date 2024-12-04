@@ -17,11 +17,11 @@ function Header() {
         borderRadius: '12px',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       }}>
-      <Text size='xl' color='violet' weight={700}>
+      <Text size='xl' weight={700} style={{ color: '#36454F' }}>
         Faheem's Shop
       </Text>
       <Group spacing='sm'>
-        <Avatar radius='xl' color='violet'>
+        <Avatar radius='xl' style={{ color: '#36454F' }}>
           {user?.name?.charAt(0) || 'G'}
         </Avatar>
         <Text size='sm' weight={500} color='dark'>

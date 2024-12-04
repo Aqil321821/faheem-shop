@@ -59,8 +59,8 @@ i {
   cursor: pointer;
 }
 
-input{
-   border : 1px solid rgb(79, 83, 83) !important;
+input {
+  border: 1px solid rgb(79, 83, 83) !important;
 }
 
 .container {
@@ -81,6 +81,11 @@ input{
 }
 
 .faheem {
-  color: #061A2B !important;
+  color: #061a2b !important;
 }
 
+.aqil {
+  margin-bottom: 10px;
+  /* justify-self: flex-end; */
+  /* align-self: flex-end; */
+}

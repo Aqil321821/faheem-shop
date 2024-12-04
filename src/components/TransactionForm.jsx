@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from '@mantine/form';
 import { Stack, TextInput, Select, Button, Group, NumberInput } from '@mantine/core';
 import { addDoc, collection } from 'firebase/firestore';
@@ -6,16 +6,20 @@ import { showNotification } from '@mantine/notifications';
 import { useDispatch } from 'react-redux';
 import { fireDB } from '../firebase';
 import { ShowLoading, HideLoading } from '../redux/alertsSlice';
+import moment from 'moment';
 
-function TransactionForm({ formMode, setFormMode, setShowForm, showForm }) {
+function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, onTransactionAdded }) {
   const dispatch = useDispatch();
   const user = JSON.parse(localStorage.getItem('user')) || {};
+  const today = moment().format('YYYY-MM-DD'); // Local time zone ke hisaab se date
+  console.log(today);
+
   const transactionForm = useForm({
     initialValues: {
       name: '',
       type: '',
       amount: '',
-      date: '',
+      date: today,
       category: '',
       reference: '',
       description: '',
@@ -43,6 +47,7 @@ function TransactionForm({ formMode, setFormMode, setShowForm, showForm }) {
 
     try {
       dispatch(ShowLoading());
+
       await addDoc(collection(fireDB, `users/${user.id}/transactions`), transactionForm.values);
       showNotification({
         title: 'Transaction added successfully',
@@ -50,6 +55,7 @@ function TransactionForm({ formMode, setFormMode, setShowForm, showForm }) {
       });
       dispatch(HideLoading());
       setShowForm(false);
+      onTransactionAdded();
     } catch (error) {
       showNotification({
         title: 'Error occurred in adding Transaction',
@@ -58,6 +64,14 @@ function TransactionForm({ formMode, setFormMode, setShowForm, showForm }) {
       dispatch(HideLoading());
     }
   };
+
+  // useEffect hook for edit mode to set date field to today's date if not set
+  useEffect(() => {
+    if (formMode === 'edit') {
+      transactionForm.setValues(transactionData);
+      transactionForm.setFieldValue('date', moment(transactionData.date, 'DD-MM-YYYY').format('YYYY-MM-DD'));
+    }
+  }, [transactionData, transactionForm, formMode]);
 
   return (
     <div>
@@ -99,13 +113,17 @@ function TransactionForm({ formMode, setFormMode, setShowForm, showForm }) {
 
           <Group position='apart' grow>
             <NumberInput label='Amount' placeholder='Enter transaction amount' {...transactionForm.getInputProps('amount')} />
-            <TextInput name='date' type='date' label='Date' placeholder='Enter Date ' {...transactionForm.getInputProps('date')} />
+            <TextInput name='date' type='date' label='Date' min={today} placeholder='Enter Date ' {...transactionForm.getInputProps('date')} />
           </Group>
 
           <TextInput name='reference' label='Reference' placeholder='Enter Transaction Reference' {...transactionForm.getInputProps('reference')} />
           <TextInput name='description' label='Description' placeholder='Enter Optional Remarks' {...transactionForm.getInputProps('description')} />
 
-          <Button color='violet' type='submit'>
+          <Button
+            color={transactionForm.isValid() ? 'green' : 'red'}
+            type='submit'
+            disabled={!transactionForm.isValid()} // Ensure button is disabled if form is invalid
+          >
             ADD
           </Button>
         </Stack>
