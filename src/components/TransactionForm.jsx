@@ -1,8 +1,15 @@
 import React from 'react';
 import { useForm } from '@mantine/form';
-import { Stack, TextInput, Select, Button, Group } from '@mantine/core';
+import { Stack, TextInput, Select, Button, Group, NumberInput } from '@mantine/core';
+import { addDoc, collection } from 'firebase/firestore';
+import { showNotification } from '@mantine/notifications';
+import { useDispatch } from 'react-redux';
+import { fireDB } from '../firebase';
+import { ShowLoading, HideLoading } from '../redux/alertsSlice';
 
-function TransactionForm() {
+function TransactionForm({ formMode, setFormMode, setShowForm, showForm }) {
+  const dispatch = useDispatch();
+  const user = JSON.parse(localStorage.getItem('user')) || {};
   const transactionForm = useForm({
     initialValues: {
       name: '',
@@ -13,12 +20,43 @@ function TransactionForm() {
       reference: '',
       description: '',
     },
-
+    validate: {
+      name: (value) => (value.trim() !== '' ? null : 'Name is required'),
+      type: (value) => (value.trim() !== '' ? null : 'Type is required'),
+      amount: (value) => (value > 0 ? null : 'Amount must be greater than 0'),
+      date: (value) => (value.trim() !== '' ? null : 'Date is required'),
+      category: (value) => (value.trim() !== '' ? null : 'Category is required'),
+    },
   });
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     console.log(transactionForm.values);
+    if (transactionForm.validate().hasErrors) {
+      showNotification({
+        title: 'Validation failed',
+        message: 'Please fill all required fields correctly',
+        color: 'red',
+      });
+      return; // Stop execution if validation fails
+    }
+
+    try {
+      dispatch(ShowLoading());
+      await addDoc(collection(fireDB, `users/${user.id}/transactions`), transactionForm.values);
+      showNotification({
+        title: 'Transaction added successfully',
+        color: 'green',
+      });
+      dispatch(HideLoading());
+      setShowForm(false);
+    } catch (error) {
+      showNotification({
+        title: 'Error occurred in adding Transaction',
+        color: 'red',
+      });
+      dispatch(HideLoading());
+    }
   };
 
   return (
@@ -36,7 +74,7 @@ function TransactionForm() {
                 { label: 'Income', value: 'income' },
                 { label: 'Expense', value: 'expense' },
               ]}
-              {...transactionForm.getInputProps("type")}
+              {...transactionForm.getInputProps('type')}
             />
             <Select
               name='category'
@@ -55,13 +93,13 @@ function TransactionForm() {
                 { label: 'Mobile Purchase', value: 'mobile-purchase' },
                 { label: 'Market Purchasing', value: 'market-purchasing' },
               ]}
-              {...transactionForm.getInputProps("category")}
+              {...transactionForm.getInputProps('category')}
             />
           </Group>
 
           <Group position='apart' grow>
-            <TextInput name='amount' label='Amount' placeholder='Enter Transaction Money' {...transactionForm.getInputProps('amount')} />
-            <TextInput name='date' label='Date' placeholder='Enter Date ' {...transactionForm.getInputProps('date')} />
+            <NumberInput label='Amount' placeholder='Enter transaction amount' {...transactionForm.getInputProps('amount')} />
+            <TextInput name='date' type='date' label='Date' placeholder='Enter Date ' {...transactionForm.getInputProps('date')} />
           </Group>
 
           <TextInput name='reference' label='Reference' placeholder='Enter Transaction Reference' {...transactionForm.getInputProps('reference')} />

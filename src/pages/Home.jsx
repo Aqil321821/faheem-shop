@@ -33,8 +33,8 @@ function Home() {
         </div>
       </Card>
 
-      <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'}>
-        <TransactionForm />
+      <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>
+        <TransactionForm formMode={formMode} setFormMode={setFormMode} setShowForm={setShowForm} showForm={showForm} />
       </Modal>
     </Box>
   );
