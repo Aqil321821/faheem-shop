@@ -1,25 +1,28 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from '@mantine/form';
 import { Stack, TextInput, Select, Button, Group, NumberInput } from '@mantine/core';
-import { addDoc, collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, setDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { showNotification } from '@mantine/notifications';
 import { useDispatch } from 'react-redux';
 import { fireDB } from '../firebase';
 import { ShowLoading, HideLoading } from '../redux/alertsSlice';
 import moment from 'moment';
 
-function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, onTransactionAdded }) {
+function TransactionForm({ formMode, setShowForm, transactionData, onTransactionAdded }) {
   const dispatch = useDispatch();
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const today = moment().format('YYYY-MM-DD'); // Local time zone ke hisaab se date
 
+  // State for dynamic categories
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
   const transactionForm = useForm({
     initialValues: {
       name: '',
-      type: '',
+      type: '', // Income or Expense
       amount: '',
       date: today,
-      category: '',
+      category: '', // Dynamically set based on type
       reference: '',
       description: '',
     },
@@ -31,6 +34,33 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
       category: (value) => (value.trim() !== '' ? null : 'Category is required'),
     },
   });
+
+  // Update category options when type changes
+  const handleTypeChange = (value) => {
+    transactionForm.setFieldValue('type', value); // Explicitly update the 'type' value
+
+    // Reset category value when type changes
+    transactionForm.setFieldValue('category', ''); // Reset category on type change
+
+    if (value === 'expense') {
+      setCategoryOptions([
+        { label: 'Repairing things', value: 'repairing' },
+        { label: 'Mobile Purchase', value: 'mobile-purchase' },
+        { label: 'Rent', value: 'rent' },
+        { label: 'Salary', value: 'salary' },
+        { label: 'Bills', value: 'bill' },
+        { label: 'Food', value: 'food' },
+        { label: 'Other', value: 'other' },
+      ]);
+    } else if (value === 'income') {
+      setCategoryOptions([
+        { label: 'Repairing', value: 'repairing' },
+        { label: 'Accessories', value: 'accessories' },
+        { label: 'Mobile Sale', value: 'mobile-sale' },
+        { label: 'Other', value: 'other' },
+      ]);
+    }
+  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -52,6 +82,7 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
       };
 
       if (formMode === 'add') {
+        // Store in a single collection
         await addDoc(collection(fireDB, `users/${user.id}/transactions`), transactionData);
         showNotification({
           title: 'Transaction added successfully',
@@ -86,10 +117,11 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
         ...transactionData,
         date: formattedDate,
       });
+
+      // Set categories dynamically based on the type of the transaction
+      handleTypeChange(transactionData.type);
     }
   }, [transactionData, formMode]);
-
-  // console.log(transactionData.id);
 
   return (
     <div>
@@ -106,24 +138,13 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
                 { label: 'Expense', value: 'expense' },
               ]}
               {...transactionForm.getInputProps('type')}
+              onChange={(value) => handleTypeChange(value)} // Handle type change
             />
             <Select
               name='category'
               label='Category'
-              placeholder='Select transaction type'
-              data={[
-                { label: 'Repairing', value: 'repairing' },
-                { label: 'Accessories', value: 'accessories' },
-                { label: 'Mobile Sale', value: 'mobile-sale' },
-                { label: 'Easyload', value: 'easyload' },
-                { label: 'Other', value: 'other' },
-                { label: 'Rent', value: 'rent' },
-                { label: 'Salary', value: 'salary' },
-                { label: 'Electricity', value: 'electricty' },
-                { label: 'Food', value: 'food' },
-                { label: 'Mobile Purchase', value: 'mobile-purchase' },
-                { label: 'Market Purchasing', value: 'market-purchasing' },
-              ]}
+              placeholder='Select transaction category'
+              data={categoryOptions} // Dynamically set options
               {...transactionForm.getInputProps('category')}
             />
           </Group>

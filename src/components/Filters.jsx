@@ -1,12 +1,42 @@
 import { Group, Select, Box, Title, Divider } from '@mantine/core';
 import { DateRangePicker } from '@mantine/dates';
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 function Filters({ setFilters, filters }) {
+  // State for dynamic categories based on type selection
+  const [categoryOptions, setCategoryOptions] = useState([]);
+
   useEffect(() => {
     console.log(filters);
   }, [filters]);
+
+  // Handle the type change (Income or Expense)
+  const handleTypeChange = (value) => {
+    // Update the 'type' filter
+    setFilters({ ...filters, type: value, category: '' }); // Reset category when type changes
+
+    // Set categories dynamically based on the selected type
+    if (value === 'income') {
+      setCategoryOptions([
+        { label: 'Repairing', value: 'repairing' },
+        { label: 'Accessories', value: 'accessories' },
+        { label: 'Mobile Sale', value: 'mobile-sale' },
+        { label: 'Other', value: 'other' },
+      ]);
+    } else if (value === 'expense') {
+      setCategoryOptions([
+        { label: 'Repairing things', value: 'repairing' },
+        { label: 'Mobile Purchase', value: 'mobile-purchase' },
+        { label: 'Rent', value: 'rent' },
+        { label: 'Salary', value: 'salary' },
+        { label: 'Bills', value: 'bill' },
+        { label: 'Food', value: 'food' },
+        { label: 'Other', value: 'other' },
+      ]);
+    } else {
+      setCategoryOptions([]); // If type is "All" or empty, no categories should be available
+    }
+  };
 
   return (
     <Box
@@ -26,6 +56,7 @@ function Filters({ setFilters, filters }) {
           label='Frequency'
           placeholder='Choose a time frame'
           data={[
+            { label: 'Today', value: 'today' },
             { label: 'Last week', value: '7' },
             { label: 'Last two Weeks', value: '14' },
             { label: 'Last Month', value: '30' },
@@ -44,7 +75,7 @@ function Filters({ setFilters, filters }) {
           name='frequency'
         />
 
-        {filters.frequency === 'custom-range' && <DateRangePicker label='Select dates' radius='md' size='md' transition='pop-top-left' transitionDuration={200} dropdownPosition='bottom' withinPortal={true} placeholder='Pick dates range' value={filters.dateRange} onChange={(value) => setFilters({ ...filters, dateRange: value })} />}
+        {filters.frequency === 'custom-range' && <DateRangePicker label='Select dates' size='md' radius='md' transition='pop-top-left' transitionDuration={200} dropdownPosition='bottom' withinPortal={true} placeholder='Pick dates range' onChange={(value) => setFilters({ ...filters, dateRange: value })} />}
 
         <Select
           label='Transaction Type'
@@ -55,7 +86,7 @@ function Filters({ setFilters, filters }) {
             { label: 'All', value: '' },
           ]}
           value={filters.type}
-          onChange={(value) => setFilters({ ...filters, type: value })}
+          onChange={(value) => handleTypeChange(value)} // Handle type change
           radius='md'
           size='md'
           transition='pop-top-left'
@@ -64,13 +95,11 @@ function Filters({ setFilters, filters }) {
           withinPortal={true}
           name='type'
         />
+
         <Select
           label='Category Type'
-          placeholder='Choose Category '
-          data={[
-            { label: 'Repairing', value: 'repairing' },
-            { label: 'Accessories', value: 'accessories' },
-          ]}
+          placeholder='Choose Category'
+          data={categoryOptions} // Dynamically set options based on type
           value={filters.category}
           onChange={(value) => setFilters({ ...filters, category: value })}
           radius='md'

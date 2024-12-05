@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { HideLoading, ShowLoading } from '../redux/alertsSlice';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { fireDB } from '../firebase';
+import 'jspdf-autotable'; // You can use this library if necessary to format tables properly
 import { showNotification } from '@mantine/notifications';
 
 function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, setShowForm, onTransactionAdded }) {
@@ -28,7 +29,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
   };
 
   const validatePassword = () => {
-    if (password === VALID_PASSWORD) {
+    if (password.trim() === VALID_PASSWORD) {
       setPasswordModalOpen(false); // Close Modal
       if (actionType === 'delete') {
         handleDelete(selectedTransactionId); // Call delete handler
@@ -45,6 +46,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
   };
 
   // Function to generate a receipt PDF
+
   const printReceipt = (transaction) => {
     const doc = new jsPDF('p', 'mm', [80, 180]); // A6 size (80mm x 180mm)
 
@@ -63,7 +65,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
     // Vertically aligned headers and values
     const headerY = 30;
     const dataY = 30;
-    const columnSpacing = 10; // Increase spacing between rows
+    const columnSpacing = 7; // Increase spacing between rows
 
     // Headers (vertically)
     const headers = ['Name', 'Amount', 'Date', 'Category', 'Reference', 'Description'];
@@ -81,11 +83,34 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
       doc.text(value, 40, dataY + idx * columnSpacing);
     });
 
+    // Adding the Legal Notes section in Roman English
+    doc.setFontSize(9);
+    const noteY = dataY + values.length * columnSpacing + 10; // Position for the notes section
+    doc.text(' Please Note :', 5, noteY); // Title for notes
+
+    const legalNotes = ['1. Please apna mobile 15 din ke andar le jayein, uske baad hamari zimmedari nahi hogi.', '2. Agar repair ke dauran mobile dead ho gaya, to shop responsible nahi hoga.', '3. Seal pack mobile ki warranty customer ko khud company se ja kar claim karni hogi.', '4. Warranty sirf original receipt ke saath valid hogi.', '5. Repair ke baad agar koi nuksan hota hai to hamari zimmedari nahi hogi.', '6. Service charges repair shuru karne ke baad liye jaenge.', 'Remarks :-'];
+
+    // Add line breaks and print each legal note
+    let currentY = noteY + 10; // Adjust Y position after title
+
+    legalNotes.forEach((note) => {
+      // Check if the note fits in the page, else break into new lines
+      const lines = doc.splitTextToSize(note, 70); // 70 is the max width for text
+      const xCoordinate = 5; // Start from X = 10 to avoid pushing too much right
+      lines.forEach((line, idx) => {
+        doc.text(line, xCoordinate, currentY + idx * 5); // Adjust Y position
+      });
+      currentY += lines.length * 5; // Move Y position after each note
+    });
+
     // Save the PDF
     doc.save(`Transaction_${transaction.name}.pdf`);
   };
 
   const handleDelete = async (id) => {
+    console.log(user.id);
+    console.log('Delete initiated for transaction:', id);
+
     try {
       dispatch(ShowLoading());
       await deleteDoc(doc(fireDB, `users/${user.id}/transactions`, id)); // Fixed: Corrected the path
@@ -99,6 +124,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
       dispatch(HideLoading());
       showNotification({
         title: 'Error during Transaction deletion',
+        message: error.message, // Add error message for debugging
         color: 'red',
       });
     }
