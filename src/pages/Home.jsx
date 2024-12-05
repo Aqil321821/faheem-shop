@@ -14,7 +14,7 @@ import 'jspdf-autotable';
 import moment from 'moment';
 
 function Home() {
-  const [filters, setFilters] = useState({ type: '', frequenct: '' });
+  const [filters, setFilters] = useState({ type: '', frequency: '7', fromDate: '', toDate: '' });
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const dispatch = useDispatch();
   const [transactions, setTransactions] = useState([]);
@@ -24,10 +24,22 @@ function Home() {
 
   const getWhereConditions = () => {
     const tempConditions = [];
+    // Type condition
     if (filters.type !== '') {
       tempConditions.push(where('type', '==', filters.type));
     }
-
+    // Frequency condition
+    if (filters.frequency !== 'custom-range') {
+      if (filters.frequency === '7') {
+        tempConditions.push(where('date', '>=', moment().subtract(7, 'days').format('YYYY-MM-DD')));
+      } else if (filters.frequency === '14') {
+        tempConditions.push(where('date', '>=', moment().subtract(14, 'days').format('YYYY-MM-DD')));
+      } else if (filters.frequency === '30') {
+        tempConditions.push(where('date', '>=', moment().subtract(30, 'days').format('YYYY-MM-DD')));
+      } else if (filters.frequency === '365') {
+        tempConditions.push(where('date', '>=', moment().subtract(365, 'days').format('YYYY-MM-DD')));
+      }
+    }
     return tempConditions;
   };
 
@@ -47,7 +59,7 @@ function Home() {
 
       dispatch(HideLoading());
     } catch (error) {
-      console.log(error);
+      console.error(error);
       showNotification({
         title: 'Error occurred in fetching Transactions data',
         color: 'red',
@@ -90,16 +102,8 @@ function Home() {
 
   useEffect(() => {
     getData();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
-
-  // Filter transactions based on today's date
-  const filteredTransactions = transactions.filter((transaction) => moment(transaction.date).isSame(moment(), 'day'));
-
-  const handleNewTransaction = () => {
-    getData(); // Fetch data again to show updated transactions
-  };
 
   return (
     <>
@@ -109,12 +113,12 @@ function Home() {
         {/* Filters Box */}
         <Card
           sx={{
-            minHeight: '150px', // Static height for filters
+            minHeight: '150px',
             backgroundColor: '#ffffff',
             borderRadius: '12px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
             padding: '20px',
-            marginBottom: '20px', // Space between filters and table
+            marginBottom: '20px',
           }}
           withBorder
           mt={20}>
@@ -123,17 +127,14 @@ function Home() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <Button
                 color='green'
-                style={{ width: '200px' }} // Set a fixed width
+                style={{ width: '200px' }}
                 onClick={() => {
                   setShowForm(true);
                   setFormMode('add');
                 }}>
                 Add Transaction
               </Button>
-              <Button
-                color='blue'
-                style={{ width: '200px' }} // Same width as the first button
-                onClick={printPDF}>
+              <Button color='blue' style={{ width: '200px' }} onClick={printPDF}>
                 Print Transactions
               </Button>
             </div>
@@ -143,7 +144,7 @@ function Home() {
         {/* Transactions Table Box */}
         <Card
           sx={{
-            minHeight: '400px', // Minimum height for table
+            minHeight: '400px',
             backgroundColor: '#ffffff',
             borderRadius: '12px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -153,15 +154,20 @@ function Home() {
           <Box
             sx={{
               overflowY: 'auto',
-              maxHeight: 'calc(100vh - 300px)', // Make it scrollable for large data
+              maxHeight: 'calc(100vh - 300px)',
             }}>
-            <TransactionsTable onTransactionAdded={handleNewTransaction} transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
+            <TransactionsTable
+              transactions={transactions} // Pass unfiltered transactions
+              setSelectedTransaction={setSelectedTransaction}
+              setFormMode={setFormMode}
+              setShowForm={setShowForm}
+            />
           </Box>
         </Card>
 
         {/* Modal for Transaction Form */}
         <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>
-          <TransactionForm onTransactionAdded={handleNewTransaction} transactionData={selectedTransaction} formMode={formMode} setFormMode={setFormMode} setShowForm={setShowForm} showForm={showForm} />
+          <TransactionForm onTransactionAdded={getData} transactionData={selectedTransaction} formMode={formMode} setFormMode={setFormMode} setShowForm={setShowForm} showForm={showForm} />
         </Modal>
       </Box>
     </>

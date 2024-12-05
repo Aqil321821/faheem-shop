@@ -30,7 +30,7 @@ function Filters({ setFilters, filters }) {
             { label: 'Last two Weeks', value: '14' },
             { label: 'Last Month', value: '30' },
             { label: 'Last Three Months', value: '90' },
-            { label: 'Last Year', value: '360' },
+            { label: 'Last Year', value: '365' },
             { label: 'Custom Range', value: 'custom-range' },
           ]}
           value={filters.frequency}
