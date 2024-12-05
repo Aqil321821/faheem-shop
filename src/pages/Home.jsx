@@ -120,7 +120,7 @@ function Home() {
           </div>
         </div>
 
-        <TransactionsTable transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
+        <TransactionsTable onTransactionAdded={handleNewTransaction} transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
       </Card>
 
       <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>

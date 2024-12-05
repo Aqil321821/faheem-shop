@@ -1,10 +1,49 @@
-import React from 'react';
-import { Table, ScrollArea, Text, Badge, ActionIcon, Tooltip, Group } from '@mantine/core';
+import React, { useState } from 'react'; // Fixed: Added useState import
+import { Table, ScrollArea, Text, Badge, ActionIcon, Tooltip, Group, Modal, TextInput, Button } from '@mantine/core';
 import { IconPencil, IconTrash, IconPrinter } from '@tabler/icons-react';
 import jsPDF from 'jspdf';
 import moment from 'moment';
+import { useDispatch } from 'react-redux';
+import { HideLoading, ShowLoading } from '../redux/alertsSlice';
+import { deleteDoc, doc } from 'firebase/firestore';
+import { fireDB } from '../firebase';
+import { showNotification } from '@mantine/notifications';
 
-function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, setShowForm, handleDelete }) {
+function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, setShowForm, onTransactionAdded }) {
+  const [isPasswordModalOpen, setPasswordModalOpen] = useState(false);
+  const [password, setPassword] = useState('');
+  const [actionType, setActionType] = useState(''); // 'delete' or 'edit'
+  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
+
+  const dispatch = useDispatch();
+  const user = JSON.parse(localStorage.getItem('user')) || {};
+
+  const VALID_PASSWORD = 'aqil3218'; // Hardcoded owner password
+
+  // Open Modal for Delete/Edit
+  const handleActionClick = (type, transactionId) => {
+    setActionType(type); // 'delete' or 'edit'
+    setSelectedTransactionId(transactionId);
+    setPasswordModalOpen(true);
+  };
+
+  const validatePassword = () => {
+    if (password === VALID_PASSWORD) {
+      setPasswordModalOpen(false); // Close Modal
+      if (actionType === 'delete') {
+        handleDelete(selectedTransactionId); // Call delete handler
+      } else if (actionType === 'edit') {
+        const transactionToEdit = transactions.find((txn) => txn.id === selectedTransactionId);
+        setSelectedTransaction(transactionToEdit);
+        setFormMode('edit');
+        setShowForm(true); // Open Edit Form
+      }
+    } else {
+      alert('Invalid Password'); // Show error if password is wrong
+    }
+    setPassword(''); // Clear password field
+  };
+
   // Function to generate a receipt PDF
   const printReceipt = (transaction) => {
     const doc = new jsPDF('p', 'mm', [80, 180]); // A6 size (80mm x 180mm)
@@ -45,7 +84,26 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
     // Save the PDF
     doc.save(`Transaction_${transaction.name}.pdf`);
   };
-  console.log(transactions);
+
+  const handleDelete = async (id) => {
+    try {
+      dispatch(ShowLoading());
+      await deleteDoc(doc(fireDB, `users/${user.id}/transactions`, id)); // Fixed: Corrected the path
+      dispatch(HideLoading());
+      showNotification({
+        title: 'Transaction deleted',
+        color: 'green',
+      });
+      onTransactionAdded();
+    } catch (error) {
+      dispatch(HideLoading());
+      showNotification({
+        title: 'Error during Transaction deletion',
+        color: 'red',
+      });
+    }
+  };
+
   // Generate rows for the table
   const getRows = transactions.map((transaction) => (
     <tr key={transaction.id}>
@@ -75,26 +133,18 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
       <td>
         <Group spacing='xs'>
           <Tooltip label='Edit' position='top' withArrow>
-            <ActionIcon color='blue' variant='light'>
-              <IconPencil
-                color='blue'
-                size={16}
-                onClick={() => {
-                  setSelectedTransaction(transaction);
-                  setFormMode('edit');
-                  setShowForm(true);
-                }}
-              />
+            <ActionIcon color='blue' variant='light' onClick={() => handleActionClick('edit', transaction.id)}>
+              <IconPencil size={16} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label='Delete' position='top' withArrow>
-            <ActionIcon color='red' variant='light' onClick={() => handleDelete(transaction.id)}>
-              <IconTrash color='red' size={16} />
+            <ActionIcon color='red' variant='light' onClick={() => handleActionClick('delete', transaction.id)}>
+              <IconTrash size={16} />
             </ActionIcon>
           </Tooltip>
           <Tooltip label='Print Receipt' position='top' withArrow>
             <ActionIcon color='teal' variant='light' onClick={() => printReceipt(transaction)}>
-              <IconPrinter color='teal' size={16} />
+              <IconPrinter size={16} />
             </ActionIcon>
           </Tooltip>
         </Group>
@@ -103,23 +153,36 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
   ));
 
   return (
-    <ScrollArea style={{ height: 'calc(100vh - 200px)' }}>
-      <Table striped highlightOnHover verticalSpacing='md' horizontalSpacing='lg' sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px', overflow: 'scroll' }}>
-        <thead>
-          <tr style={{ backgroundColor: '#f4f4f4' }}>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>Category</th>
-            <th>Reference</th>
-            <th>Description</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>{getRows}</tbody>
-      </Table>
-    </ScrollArea>
+    <>
+      {/* Password Modal */}
+      <Modal opened={isPasswordModalOpen} onClose={() => setPasswordModalOpen(false)} title='Enter Password' centered>
+        <TextInput label='Password' placeholder='Enter Password' value={password} onChange={(e) => setPassword(e.target.value)} type='password' />
+        <div style={{ marginTop: 20, textAlign: 'right' }}>
+          <Button variant='outline' onClick={() => setPasswordModalOpen(false)} style={{ marginRight: 10 }}>
+            Cancel
+          </Button>
+          <Button onClick={validatePassword}>Submit</Button>
+        </div>
+      </Modal>
+
+      <ScrollArea style={{ height: 'calc(100vh - 200px)' }}>
+        <Table striped highlightOnHover verticalSpacing='md' horizontalSpacing='lg' sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px', overflow: 'scroll' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f4f4f4' }}>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Reference</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>{getRows}</tbody>
+        </Table>
+      </ScrollArea>
+    </>
   );
 }
 
