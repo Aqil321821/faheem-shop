@@ -8,11 +8,13 @@ import { fireDB } from '../firebase';
 import { ShowLoading, HideLoading } from '../redux/alertsSlice';
 import { getDocs, query, collection, orderBy } from 'firebase/firestore';
 import TransactionsTable from '../components/TransactionsTable';
+import Filters from '../components/Filters';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import moment from 'moment';
 
 function Home() {
+  const [filters, setFilters] = useState({});
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const dispatch = useDispatch();
   const [transactions, setTransactions] = useState([]);
@@ -90,43 +92,69 @@ function Home() {
   };
 
   return (
-    <Box m={10} style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', padding: '0px' }}>
-      <Header />
-      <Card
-        sx={{
-          height: '80vh',
-          backgroundColor: '#ffffff',
-          borderRadius: '12px',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        }}
-        withBorder
-        mt={20}>
-        <div className='flex justify-between  '>
-          <div>Filter</div>
+    <>
+      <Box m={5} style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', padding: '0px' }}>
+        <Header />
 
-          {/* Buttons Container */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }} className='aqil'>
-            <Button
-              color='green'
-              onClick={() => {
-                setShowForm(true);
-                setFormMode('add');
-              }}>
-              Add Transaction
-            </Button>
-            <Button color='blue' onClick={printPDF}>
-              Print Transactions
-            </Button>
+        {/* Filters Box */}
+        <Card
+          sx={{
+            minHeight: '150px', // Static height for filters
+            backgroundColor: '#ffffff',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            padding: '20px',
+            marginBottom: '20px', // Space between filters and table
+          }}
+          withBorder
+          mt={20}>
+          <div className='flex justify-between'>
+            <Filters filters={filters} setFilters={setFilters} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <Button
+                color='green'
+                style={{ width: '200px' }} // Set a fixed width
+                onClick={() => {
+                  setShowForm(true);
+                  setFormMode('add');
+                }}>
+                Add Transaction
+              </Button>
+              <Button
+                color='blue'
+                style={{ width: '200px' }} // Same width as the first button
+                onClick={printPDF}>
+                Print Transactions
+              </Button>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        <TransactionsTable onTransactionAdded={handleNewTransaction} transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
-      </Card>
+        {/* Transactions Table Box */}
+        <Card
+          sx={{
+            minHeight: '400px', // Minimum height for table
+            backgroundColor: '#ffffff',
+            borderRadius: '12px',
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            padding: '20px',
+          }}
+          withBorder>
+          <Box
+            sx={{
+              overflowY: 'auto',
+              maxHeight: 'calc(100vh - 300px)', // Make it scrollable for large data
+            }}>
+            <TransactionsTable onTransactionAdded={handleNewTransaction} transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
+          </Box>
+        </Card>
 
-      <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>
-        <TransactionForm onTransactionAdded={handleNewTransaction} transactionData={selectedTransaction} formMode={formMode} setFormMode={setFormMode} setShowForm={setShowForm} showForm={showForm} />
-      </Modal>
-    </Box>
+        {/* Modal for Transaction Form */}
+        <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>
+          <TransactionForm onTransactionAdded={handleNewTransaction} transactionData={selectedTransaction} formMode={formMode} setFormMode={setFormMode} setShowForm={setShowForm} showForm={showForm} />
+        </Modal>
+      </Box>
+    </>
   );
 }
 

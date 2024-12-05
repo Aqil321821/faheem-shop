@@ -85,7 +85,11 @@ input {
 }
 
 .aqil {
-  margin-bottom: 10px;
+  margin-bottom: 0px;
   /* justify-self: flex-end; */
   /* align-self: flex-end; */
+  padding-top: 5px;
+}
+.aqil-2 {
+  margin-bottom: 5px;
 }

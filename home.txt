@@ -1,0 +1,42 @@
+ return (
+    <Box m={5} style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', padding: '0px' }}>
+      <Header />
+      <Card
+        sx={{
+          height: '100vh',
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        
+        }}
+        withBorder
+        mt={20}>
+        <div className='flex justify-between  '>
+          <div>
+            <Filters filters={filters} setFilters={setFilters} onTransactionAdded={handleNewTransaction} />
+          </div>
+
+          {/* Buttons Container */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }} className='aqil'>
+            <Button
+              color='green'
+              onClick={() => {
+                setShowForm(true);
+                setFormMode('add');
+              }}>
+              Add Transaction
+            </Button>
+            <Button color='blue' onClick={printPDF}>
+              Print Transactions
+            </Button>
+          </div>
+        </div>
+
+        <TransactionsTable onTransactionAdded={handleNewTransaction} transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
+      </Card>
+
+      <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>
+        <TransactionForm onTransactionAdded={handleNewTransaction} transactionData={selectedTransaction} formMode={formMode} setFormMode={setFormMode} setShowForm={setShowForm} showForm={showForm} />
+      </Modal>
+    </Box>
+  );

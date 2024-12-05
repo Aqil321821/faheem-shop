@@ -165,7 +165,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
         </div>
       </Modal>
 
-      <ScrollArea style={{ height: 'calc(100vh - 200px)' }}>
+      <ScrollArea style={{ height: 'calc(100vh-100px)' }}>
         <Table striped highlightOnHover verticalSpacing='md' horizontalSpacing='lg' sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px', overflow: 'scroll' }}>
           <thead>
             <tr style={{ backgroundColor: '#f4f4f4' }}>
