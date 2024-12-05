@@ -52,7 +52,7 @@ function Filters({ setFilters, filters }) {
           data={[
             { label: 'Income', value: 'income' },
             { label: 'Expense', value: 'expense' },
-            { label: 'All', value: 'all' },
+            { label: 'All', value: '' },
           ]}
           value={filters.type}
           onChange={(value) => setFilters({ ...filters, type: value })}

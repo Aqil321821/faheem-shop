@@ -6,7 +6,7 @@ import { showNotification } from '@mantine/notifications';
 import { useDispatch } from 'react-redux';
 import { fireDB } from '../firebase';
 import { ShowLoading, HideLoading } from '../redux/alertsSlice';
-import { getDocs, query, collection, orderBy } from 'firebase/firestore';
+import { getDocs, query, collection, orderBy, where } from 'firebase/firestore';
 import TransactionsTable from '../components/TransactionsTable';
 import Filters from '../components/Filters';
 import jsPDF from 'jspdf';
@@ -14,7 +14,7 @@ import 'jspdf-autotable';
 import moment from 'moment';
 
 function Home() {
-  const [filters, setFilters] = useState({});
+  const [filters, setFilters] = useState({ type: '', frequenct: '' });
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const dispatch = useDispatch();
   const [transactions, setTransactions] = useState([]);
@@ -22,10 +22,20 @@ function Home() {
   const [formMode, setFormMode] = useState('add');
   const [selectedTransaction, setSelectedTransaction] = useState({});
 
+  const getWhereConditions = () => {
+    const tempConditions = [];
+    if (filters.type !== '') {
+      tempConditions.push(where('type', '==', filters.type));
+    }
+
+    return tempConditions;
+  };
+
   const getData = async () => {
     try {
+      const whereConditions = getWhereConditions();
       dispatch(ShowLoading());
-      const qry = query(collection(fireDB, `users/${user.id}/transactions`), orderBy('time', 'desc'));
+      const qry = query(collection(fireDB, `users/${user.id}/transactions`), orderBy('time', 'desc'), ...whereConditions);
       const response = await getDocs(qry);
 
       const newTransactions = response.docs.map((doc) => ({
@@ -82,7 +92,7 @@ function Home() {
     getData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [filters]);
 
   // Filter transactions based on today's date
   const filteredTransactions = transactions.filter((transaction) => moment(transaction.date).isSame(moment(), 'day'));
