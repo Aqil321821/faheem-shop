@@ -28,7 +28,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
 
     // Headers (vertically)
     const headers = ['Name', 'Amount', 'Date', 'Category', 'Reference', 'Description'];
-    const values = [transaction.name, `$${transaction.amount}`, moment(transaction.date).format('DD-MM-YYYY'), transaction.category, transaction.reference || '-', transaction.description || 'No description'];
+    const values = [transaction.name, `Rs. ${transaction.amount}`, moment(transaction.date).format('DD-MM-YYYY'), transaction.category, transaction.reference || '-', transaction.description || 'No description'];
 
     // Printing headers vertically
     headers.forEach((header, idx) => {
@@ -45,7 +45,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
     // Save the PDF
     doc.save(`Transaction_${transaction.name}.pdf`);
   };
-
+  console.log(transactions);
   // Generate rows for the table
   const getRows = transactions.map((transaction) => (
     <tr key={transaction.id}>
@@ -58,7 +58,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
         </Badge>
       </td>
       <td>
-        <Text>{`$${transaction.amount}`}</Text>
+        <Text>{`${transaction.amount} /-`}</Text>
       </td>
       <td>
         <Text>{moment(transaction.date).format('DD-MM-YYYY')}</Text>
@@ -103,7 +103,7 @@ function TransactionsTable({ transactions, setSelectedTransaction, setFormMode, 
   ));
 
   return (
-    <ScrollArea>
+    <ScrollArea style={{ height: 'calc(100vh - 200px)' }}>
       <Table striped highlightOnHover verticalSpacing='md' horizontalSpacing='lg' sx={{ backgroundColor: '#f9f9f9', borderRadius: '8px', overflow: 'scroll' }}>
         <thead>
           <tr style={{ backgroundColor: '#f4f4f4' }}>

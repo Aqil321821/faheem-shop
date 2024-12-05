@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useForm } from '@mantine/form';
 import { Stack, TextInput, Select, Button, Group, NumberInput } from '@mantine/core';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { showNotification } from '@mantine/notifications';
 import { useDispatch } from 'react-redux';
 import { fireDB } from '../firebase';
@@ -12,7 +12,6 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
   const dispatch = useDispatch();
   const user = JSON.parse(localStorage.getItem('user')) || {};
   const today = moment().format('YYYY-MM-DD'); // Local time zone ke hisaab se date
-  console.log(today);
 
   const transactionForm = useForm({
     initialValues: {
@@ -35,50 +34,68 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    console.log(transactionForm.values);
     if (transactionForm.validate().hasErrors) {
       showNotification({
         title: 'Validation failed',
         message: 'Please fill all required fields correctly',
         color: 'red',
       });
-      return; // Stop execution if validation fails
+      return;
     }
 
     try {
       dispatch(ShowLoading());
+      // Add or Update Transaction Logic
+      const transactionData = {
+        ...transactionForm.values,
+        time: serverTimestamp(), // Adding timestamp here
+      };
 
-      await addDoc(collection(fireDB, `users/${user.id}/transactions`), transactionForm.values);
-      showNotification({
-        title: 'Transaction added successfully',
-        color: 'green',
-      });
+      if (formMode === 'add') {
+        await addDoc(collection(fireDB, `users/${user.id}/transactions`), transactionData);
+        showNotification({
+          title: 'Transaction added successfully',
+          color: 'green',
+        });
+      } else if (formMode === 'edit') {
+        await setDoc(doc(fireDB, `users/${user.id}/transactions`, transactionData.id), transactionData);
+        showNotification({
+          title: 'Transaction updated successfully',
+          color: 'green',
+        });
+      }
+      // Reset form after submission and trigger UI re-render
+      transactionForm.reset();
       dispatch(HideLoading());
       setShowForm(false);
-      onTransactionAdded();
+      onTransactionAdded(); // Triggered after successful update to re-fetch data
     } catch (error) {
       showNotification({
-        title: 'Error occurred in adding Transaction',
+        title: `Error in ${formMode === 'add' ? 'adding' : 'updating'} transaction`,
+        message: error.message || 'An error occurred, please try again later.',
         color: 'red',
       });
       dispatch(HideLoading());
     }
   };
 
-  // useEffect hook for edit mode to set date field to today's date if not set
   useEffect(() => {
-    if (formMode === 'edit') {
-      transactionForm.setValues(transactionData);
-      transactionForm.setFieldValue('date', moment(transactionData.date, 'DD-MM-YYYY').format('YYYY-MM-DD'));
+    if (formMode === 'edit' && transactionData) {
+      const formattedDate = moment(transactionData.date, ['DD-MM-YYYY', 'YYYY-MM-DD']).format('YYYY-MM-DD');
+      transactionForm.setValues({
+        ...transactionData,
+        date: formattedDate,
+      });
     }
-  }, [transactionData, transactionForm, formMode]);
+  }, [transactionData, formMode]);
+
+  // console.log(transactionData.id);
 
   return (
     <div>
-      <form action='' onSubmit={onSubmit}>
+      <form onSubmit={onSubmit}>
         <Stack>
           <TextInput name='name' label='Name' placeholder='Enter Transaction Name' {...transactionForm.getInputProps('name')} />
-
           <Group position='apart' grow>
             <Select
               name='type'
@@ -110,21 +127,14 @@ function TransactionForm({ formMode, setFormMode, setShowForm, transactionData, 
               {...transactionForm.getInputProps('category')}
             />
           </Group>
-
           <Group position='apart' grow>
             <NumberInput label='Amount' placeholder='Enter transaction amount' {...transactionForm.getInputProps('amount')} />
-            <TextInput name='date' type='date' label='Date' min={today} placeholder='Enter Date ' {...transactionForm.getInputProps('date')} />
+            <TextInput name='date' type='date' label='Date' min={today} placeholder='Enter Date' {...transactionForm.getInputProps('date')} />
           </Group>
-
           <TextInput name='reference' label='Reference' placeholder='Enter Transaction Reference' {...transactionForm.getInputProps('reference')} />
           <TextInput name='description' label='Description' placeholder='Enter Optional Remarks' {...transactionForm.getInputProps('description')} />
-
-          <Button
-            color={transactionForm.isValid() ? 'green' : 'red'}
-            type='submit'
-            disabled={!transactionForm.isValid()} // Ensure button is disabled if form is invalid
-          >
-            ADD
+          <Button type='submit' color={formMode === 'add' ? 'green' : 'blue'}>
+            {formMode === 'add' ? 'Add' : 'Update'}
           </Button>
         </Stack>
       </form>

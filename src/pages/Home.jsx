@@ -6,10 +6,11 @@ import { showNotification } from '@mantine/notifications';
 import { useDispatch } from 'react-redux';
 import { fireDB } from '../firebase';
 import { ShowLoading, HideLoading } from '../redux/alertsSlice';
-import { getDocs, query, collection } from 'firebase/firestore';
+import { getDocs, query, collection, orderBy } from 'firebase/firestore';
 import TransactionsTable from '../components/TransactionsTable';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import moment from 'moment';
 
 function Home() {
   const user = JSON.parse(localStorage.getItem('user')) || {};
@@ -22,14 +23,15 @@ function Home() {
   const getData = async () => {
     try {
       dispatch(ShowLoading());
-      const qry = query(collection(fireDB, `users/${user.id}/transactions`));
+      const qry = query(collection(fireDB, `users/${user.id}/transactions`), orderBy('time', 'desc'));
       const response = await getDocs(qry);
-      const data = response.docs.map((doc) => ({
+
+      const newTransactions = response.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-      console.log(data);
-      setTransactions(data);
+
+      setTransactions(newTransactions);
 
       dispatch(HideLoading());
     } catch (error) {
@@ -41,10 +43,28 @@ function Home() {
       dispatch(HideLoading());
     }
   };
+
   const printPDF = () => {
     const doc = new jsPDF();
     const tableColumn = ['Name', 'Type', 'Amount', 'Date', 'Category', 'Reference', 'Description'];
-    const tableRows = transactions.map((transaction) => [transaction.name, transaction.type, transaction.amount, transaction.date, transaction.category, transaction.reference || '-', transaction.description || '-']);
+
+    const tableRows = transactions.map((transaction) => {
+      const amount = parseFloat(transaction.amount);
+      const formattedAmount = isNaN(amount) ? 'Rs. 0.00' : 'Rs. ' + amount.toFixed(2);
+
+      // Format date to DD-MM-YYYY
+      const formattedDate = moment(transaction.date).format('DD-MM-YYYY');
+
+      return [
+        transaction.name,
+        transaction.type,
+        formattedAmount, // Correctly formatted amount with Rs.
+        formattedDate, // Correctly formatted date
+        transaction.category,
+        transaction.reference || '-',
+        transaction.description || '-',
+      ];
+    });
 
     doc.text('Transaction Records', 14, 15);
     doc.autoTable({
@@ -58,12 +78,17 @@ function Home() {
 
   useEffect(() => {
     getData();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Filter transactions based on today's date
+  const filteredTransactions = transactions.filter((transaction) => moment(transaction.date).isSame(moment(), 'day'));
 
   const handleNewTransaction = () => {
     getData(); // Fetch data again to show updated transactions
   };
+
   return (
     <Box m={10} style={{ backgroundColor: '#f9f9f9', borderRadius: '8px', padding: '0px' }}>
       <Header />
@@ -95,7 +120,7 @@ function Home() {
           </div>
         </div>
 
-        <TransactionsTable transactions={transactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
+        <TransactionsTable transactions={filteredTransactions} setSelectedTransaction={setSelectedTransaction} setFormMode={setFormMode} setShowForm={setShowForm} />
       </Card>
 
       <Modal size='lg' opened={showForm} onClose={() => setShowForm(false)} title={formMode === 'add' ? 'Add Transaction' : 'Edit Transaction'} centered>
