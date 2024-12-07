@@ -35,8 +35,13 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
   });
 
   const handleTypeChange = (value) => {
+    // Set type value
     transactionForm.setFieldValue('type', value);
+
+    // Reset category
     transactionForm.setFieldValue('category', '');
+
+    // Set category options based on type
     if (value === 'expense') {
       setCategoryOptions([
         { label: 'Repairing things', value: 'repairing' },
@@ -112,6 +117,7 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
       });
       handleTypeChange(transactionData.type);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [transactionData, formMode]);
 
   return (
