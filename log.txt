@@ -8,7 +8,6 @@ import { showNotification } from '@mantine/notifications';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { HideLoading, ShowLoading } from '../redux/alertsSlice';
-import login from '../assets/login.jpg';
 
 function Login() {
   const dispatch = useDispatch();
@@ -36,6 +35,7 @@ function Login() {
           title: `Han Login Ho gaya ha tu Bahi`,
           color: 'green',
         });
+        //set data to local storage
         const dataToPutInLocalStorage = {
           name: existingUsers.docs[0].data().name,
           email: existingUsers.docs[0].data().email,
@@ -62,30 +62,18 @@ function Login() {
 
   const submitForm = (e) => {
     e.preventDefault();
-    const isValid = loginForm.validate();
+    const isValid = loginForm.validate(); // Trigger validation
     if (!isValid.hasErrors) {
+      console.log(loginForm.values); // Handle form submission
+      // Submit form or perform further actions
       onSubmit(e);
     }
   };
 
   return (
     <>
-      <div
-        className='flex h-screen justify-center items-center'
-        style={{
-          backgroundImage: `url(${login})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}>
-        <Card
-          sx={{
-            width: 500,
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(5px)',
-          }}
-          shadow='lg'
-          withBorder>
+      <div className='flex h-screen justify-center items-center'>
+        <Card sx={{ width: 500 }} shadow='lg' withBorder>
           <Title order={3} align='center' mb={3}>
             Login With Your Credentials
           </Title>
@@ -100,7 +88,12 @@ function Login() {
               <TextInput type='password' label='Password' placeholder='Enter Your Password' name='password' {...loginForm.getInputProps('password')} error={loginForm.errors.password} onBlur={() => loginForm.validateField('password')} />
 
               {/* Submit Button */}
-              <Button type='submit' mt='md' fullWidth disabled={!loginForm.isValid()} color='teal'>
+              <Button
+                type='submit'
+                mt='md'
+                fullWidth
+                disabled={!loginForm.isValid()} // Disable if form is invalid
+                color='teal'>
                 Login To Faheem's Shop
               </Button>
 

@@ -11,18 +11,17 @@ import moment from 'moment';
 function TransactionForm({ formMode, setShowForm, transactionData, onTransactionAdded }) {
   const dispatch = useDispatch();
   const user = JSON.parse(localStorage.getItem('user')) || {};
-  const today = moment().format('YYYY-MM-DD'); // Local time zone ke hisaab se date
+  const today = moment().format('YYYY-MM-DD');
 
-  // State for dynamic categories
   const [categoryOptions, setCategoryOptions] = useState([]);
 
   const transactionForm = useForm({
     initialValues: {
       name: '',
-      type: '', // Income or Expense
+      type: '',
       amount: '',
       date: today,
-      category: '', // Dynamically set based on type
+      category: '',
       reference: '',
       description: '',
     },
@@ -35,13 +34,9 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
     },
   });
 
-  // Update category options when type changes
   const handleTypeChange = (value) => {
-    transactionForm.setFieldValue('type', value); // Explicitly update the 'type' value
-
-    // Reset category value when type changes
-    transactionForm.setFieldValue('category', ''); // Reset category on type change
-
+    transactionForm.setFieldValue('type', value);
+    transactionForm.setFieldValue('category', '');
     if (value === 'expense') {
       setCategoryOptions([
         { label: 'Repairing things', value: 'repairing' },
@@ -75,14 +70,12 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
 
     try {
       dispatch(ShowLoading());
-      // Add or Update Transaction Logic
       const transactionData = {
         ...transactionForm.values,
-        time: serverTimestamp(), // Adding timestamp here
+        time: serverTimestamp(),
       };
 
       if (formMode === 'add') {
-        // Store in a single collection
         await addDoc(collection(fireDB, `users/${user.id}/transactions`), transactionData);
         showNotification({
           title: 'Transaction added successfully',
@@ -95,11 +88,11 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
           color: 'green',
         });
       }
-      // Reset form after submission and trigger UI re-render
+
       transactionForm.reset();
       dispatch(HideLoading());
       setShowForm(false);
-      onTransactionAdded(); // Triggered after successful update to re-fetch data
+      onTransactionAdded();
     } catch (error) {
       showNotification({
         title: `Error in ${formMode === 'add' ? 'adding' : 'updating'} transaction`,
@@ -117,8 +110,6 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
         ...transactionData,
         date: formattedDate,
       });
-
-      // Set categories dynamically based on the type of the transaction
       handleTypeChange(transactionData.type);
     }
   }, [transactionData, formMode]);
@@ -138,19 +129,14 @@ function TransactionForm({ formMode, setShowForm, transactionData, onTransaction
                 { label: 'Expense', value: 'expense' },
               ]}
               {...transactionForm.getInputProps('type')}
-              onChange={(value) => handleTypeChange(value)} // Handle type change
+              onChange={(value) => handleTypeChange(value)}
+              sx={{ width: '100%' }}
             />
-            <Select
-              name='category'
-              label='Category'
-              placeholder='Select transaction category'
-              data={categoryOptions} // Dynamically set options
-              {...transactionForm.getInputProps('category')}
-            />
+            <Select name='category' label='Category' placeholder='Select transaction category' data={categoryOptions} {...transactionForm.getInputProps('category')} sx={{ width: '100%' }} />
           </Group>
           <Group position='apart' grow>
-            <NumberInput label='Amount' placeholder='Enter transaction amount' {...transactionForm.getInputProps('amount')} />
-            <TextInput name='date' type='date' label='Date' min={today} placeholder='Enter Date' {...transactionForm.getInputProps('date')} />
+            <NumberInput label='Amount' placeholder='Enter transaction amount' {...transactionForm.getInputProps('amount')} sx={{ width: '100%' }} />
+            <TextInput name='date' type='date' label='Date' min={today} placeholder='Enter Date' {...transactionForm.getInputProps('date')} sx={{ width: '100%' }} />
           </Group>
           <TextInput name='reference' label='Reference' placeholder='Enter Transaction Reference' {...transactionForm.getInputProps('reference')} />
           <TextInput name='description' label='Description' placeholder='Enter Optional Remarks' {...transactionForm.getInputProps('description')} />

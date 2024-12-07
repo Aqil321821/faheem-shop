@@ -10,11 +10,11 @@ import { getDocs, query, collection, orderBy, where } from 'firebase/firestore';
 import TransactionsTable from '../components/TransactionsTable';
 import Filters from '../components/Filters';
 import jsPDF from 'jspdf';
-import { IconPlus, IconPrinter } from '@tabler/icons-react';
-import { IconExclamationCircle } from '@tabler/icons-react';
+import { IconPlus, IconPrinter, IconTable, IconChartBar, IconExclamationCircle,  } from '@tabler/icons-react';
 
 import 'jspdf-autotable';
 import moment from 'moment';
+import Analytics from '../components/Analytics';
 
 function Home() {
   const [filters, setFilters] = useState({ type: '', frequency: 'today', dateRange: [] });
@@ -24,6 +24,7 @@ function Home() {
   const [showForm, setShowForm] = useState(false);
   const [formMode, setFormMode] = useState('add');
   const [selectedTransaction, setSelectedTransaction] = useState({});
+  const [view, setView] = useState('table');
 
   const getWhereConditions = () => {
     const tempConditions = [];
@@ -174,6 +175,7 @@ function Home() {
           mt={20}>
           <div className='flex justify-between'>
             <Filters filters={filters} setFilters={setFilters} />
+
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
               <Button
                 color='green'
@@ -190,6 +192,22 @@ function Home() {
                 <IconPrinter size={18} style={{ marginRight: '10px' }} /> {/* Icon for "Print Transactions" */}
                 Print Transactions
               </Button>
+
+              {/* Button for View */}
+
+              <Button color='gray' style={{ width: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setView(view === 'table' ? 'analytics' : 'table')}>
+                {view === 'table' ? (
+                  <>
+                    <IconChartBar size={18} style={{ marginRight: '10px' }} />
+                    Analytics View
+                  </>
+                ) : (
+                  <>
+                    <IconTable size={18} style={{ marginRight: '10px' }} />
+                    Table View
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </Card>
@@ -197,7 +215,7 @@ function Home() {
         {/* Transactions Table Box */}
         <Card
           sx={{
-            minHeight: '400px',
+            minHeight: '800px',
             backgroundColor: '#ffffff',
             borderRadius: '12px',
             boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
@@ -207,7 +225,7 @@ function Home() {
           <Box
             sx={{
               overflowY: 'auto',
-              maxHeight: 'calc(100vh - 300px)',
+              maxHeight: 'calc(100vh )',
             }}>
             {transactions.length === 0 ? (
               <Box
@@ -224,10 +242,9 @@ function Home() {
                   marginBottom: '20px',
                   textAlign: 'center',
                 }}>
-                <IconExclamationCircle size={48} color='red' style={{ marginBottom: '15px' }} /> {/* Add an exclamation icon */}
+                <IconExclamationCircle size={48} color='red' style={{ marginBottom: '15px' }} />
                 <Text
                   align='center'
-                  color='dimmed'
                   style={{
                     fontSize: '20px',
                     fontWeight: 'bold',
@@ -238,7 +255,6 @@ function Home() {
                 </Text>
                 <Text
                   align='center'
-                  color='dimmed'
                   style={{
                     fontSize: '16px',
                     color: '#888',
@@ -248,23 +264,21 @@ function Home() {
                 </Text>
               </Box>
             ) : (
-              <TransactionsTable
-                transactions={transactions} // Pass unfiltered transactions
-                setSelectedTransaction={setSelectedTransaction}
-                setFormMode={setFormMode}
-                setShowForm={setShowForm}
-                onTransactionAdded={getData}
-              />
+              <>
+                {view === 'table' && (
+                  <TransactionsTable
+                    transactions={transactions} // Pass unfiltered transactions
+                    setSelectedTransaction={setSelectedTransaction}
+                    setFormMode={setFormMode}
+                    setShowForm={setShowForm}
+                    onTransactionAdded={getData}
+                  />
+                )}
+                {/* //fahem put charts here ! */}
+                {view === 'analytics' && <Analytics transactions={transactions} />}
+                {/* {view === 'analytics' && <Fahem transactions={transactions} />} */}
+              </>
             )}
-
-            {/* 
-            <TransactionsTable
-              transactions={transactions} // Pass unfiltered transactions
-              setSelectedTransaction={setSelectedTransaction}
-              setFormMode={setFormMode}
-              setShowForm={setShowForm}
-              onTransactionAdded={getData}
-            /> */}
           </Box>
         </Card>
 

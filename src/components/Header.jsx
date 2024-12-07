@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, Text, Avatar, Group } from '@mantine/core';
+import { FiLogOut } from 'react-icons/fi'; // Import Feather Icons logout arrow icon
 
 function Header() {
   const user = JSON.parse(localStorage.getItem('user')) || { name: 'Guest' };
@@ -24,8 +25,15 @@ function Header() {
         <Avatar radius='xl' style={{ color: '#36454F' }}>
           {user?.name?.charAt(0) || 'G'}
         </Avatar>
-        <Text size='sm' weight={500} color='dark'>
+        <Text size='sm' weight={500} color='dark' style={{ display: 'flex', alignItems: 'center' }}>
           {user.name}
+          <FiLogOut
+            style={{ marginLeft: '8px', color: '#36454F', fontSize: '18px', cursor: 'pointer' }}
+            onClick={() => {
+              localStorage.removeItem('user');
+              window.location.reload();
+            }}
+          />
         </Text>
       </Group>
     </Card>

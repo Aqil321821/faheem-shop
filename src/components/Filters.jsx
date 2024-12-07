@@ -1,21 +1,17 @@
 import { Group, Select, Box, Title, Divider } from '@mantine/core';
 import { DateRangePicker } from '@mantine/dates';
 import React, { useEffect, useState } from 'react';
+import '../stylesheets/filters.css';
 
 function Filters({ setFilters, filters }) {
-  // State for dynamic categories based on type selection
   const [categoryOptions, setCategoryOptions] = useState([]);
 
   useEffect(() => {
     console.log(filters);
   }, [filters]);
 
-  // Handle the type change (Income or Expense)
   const handleTypeChange = (value) => {
-    // Update the 'type' filter
-    setFilters({ ...filters, type: value, category: '' }); // Reset category when type changes
-
-    // Set categories dynamically based on the selected type
+    setFilters({ ...filters, type: value, category: '' });
     if (value === 'income') {
       setCategoryOptions([
         { label: 'Repairing', value: 'repairing' },
@@ -34,7 +30,7 @@ function Filters({ setFilters, filters }) {
         { label: 'Other', value: 'other' },
       ]);
     } else {
-      setCategoryOptions([]); // If type is "All" or empty, no categories should be available
+      setCategoryOptions([]);
     }
   };
 
@@ -51,7 +47,10 @@ function Filters({ setFilters, filters }) {
         Filter Transactions
       </Title>
       <Divider my='sm' />
-      <Group spacing='md' grow>
+
+      {/* Group with spacing and full width */}
+      <Group spacing='md' grow direction={{ base: 'column', sm: 'row' }}>
+        {/* Frequency Select */}
         <Select
           label='Frequency'
           placeholder='Choose a time frame'
@@ -73,10 +72,32 @@ function Filters({ setFilters, filters }) {
           dropdownPosition='bottom'
           withinPortal={true}
           name='frequency'
+          sx={{
+            width: '100%', // Full width on smaller screens
+            maxWidth: '250px', // Max width for larger screens
+          }}
         />
 
-        {filters.frequency === 'custom-range' && <DateRangePicker label='Select dates' size='md' radius='md' transition='pop-top-left' transitionDuration={200} dropdownPosition='bottom' withinPortal={true} placeholder='Pick dates range' onChange={(value) => setFilters({ ...filters, dateRange: value })} />}
+        {/* DateRangePicker (visible only if custom range is selected) */}
+        {filters.frequency === 'custom-range' && (
+          <DateRangePicker
+            label='Select dates'
+            size='md'
+            radius='md'
+            transition='pop-top-left'
+            transitionDuration={200}
+            dropdownPosition='bottom'
+            withinPortal={true}
+            placeholder='Pick dates range'
+            onChange={(value) => setFilters({ ...filters, dateRange: value })}
+            sx={{
+              width: '100%', // Full width on smaller screens
+              maxWidth: '250px', // Max width for larger screens
+            }}
+          />
+        )}
 
+        {/* Transaction Type Select */}
         <Select
           label='Transaction Type'
           placeholder='Income or Expense'
@@ -86,7 +107,7 @@ function Filters({ setFilters, filters }) {
             { label: 'All', value: '' },
           ]}
           value={filters.type}
-          onChange={(value) => handleTypeChange(value)} // Handle type change
+          onChange={(value) => handleTypeChange(value)}
           radius='md'
           size='md'
           transition='pop-top-left'
@@ -94,12 +115,17 @@ function Filters({ setFilters, filters }) {
           dropdownPosition='bottom'
           withinPortal={true}
           name='type'
+          sx={{
+            width: '100%', // Full width on smaller screens
+            maxWidth: '250px', // Max width for larger screens
+          }}
         />
 
+        {/* Category Select */}
         <Select
           label='Category Type'
           placeholder='Choose Category'
-          data={categoryOptions} // Dynamically set options based on type
+          data={categoryOptions}
           value={filters.category}
           onChange={(value) => setFilters({ ...filters, category: value })}
           radius='md'
@@ -109,6 +135,10 @@ function Filters({ setFilters, filters }) {
           dropdownPosition='bottom'
           withinPortal={true}
           name='category'
+          sx={{
+            width: '100%', // Full width on smaller screens
+            maxWidth: '300px', // Max width for larger screens
+          }}
         />
       </Group>
     </Box>

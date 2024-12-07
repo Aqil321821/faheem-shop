@@ -1,0 +1,42 @@
+/* General Styles */
+.aqil-2 {
+  padding: 20px;
+  background-color: #f1f1f1;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* For screens smaller than 768px (Mobile devices) */
+@media (max-width: 768px) {
+  .aqil-2 {
+    padding: 15px; /* Reduced padding */
+  }
+
+  .mantine-Group-root {
+    flex-direction: column !important; /* Stack the selects vertically */
+  }
+
+  .mantine-Select-root,
+  .mantine-DateRangePicker-root {
+    width: 100% !important; /* Make select and date picker full-width */
+    font-size: 14px; /* Adjust font size */
+    margin-bottom: 10px; /* Optional space between selects */
+  }
+  form select {
+    display: inline-block;
+    max-width: 100%;
+  }
+}
+
+/* For screens larger than 768px (Desktop & larger tablets) */
+@media (min-width: 768px) {
+  .mantine-Select-root,
+  .mantine-DateRangePicker-root {
+    width: auto; /* Reset width to default for larger screens */
+    max-width: 300px; /* Limit the max-width to ensure a neat layout */
+  }
+
+  .mantine-Group-root {
+    flex-direction: row; /* Keep the selects side-by-side */
+  }
+}
