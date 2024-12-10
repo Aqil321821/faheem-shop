@@ -1,3 +1,12 @@
+# About Project
+this is a simple app i make for my friend to keep records of his shop of sale and Purchase,
+I use Mantine Library and firebase for this little App.
+
+# Have a look here:
+https://raofaheem.netlify.app/
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
